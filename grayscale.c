@@ -13,9 +13,9 @@ void grayscale(unsigned char *image, unsigned char *end)
     {
         // isolate R, G, and B values
         unsigned char RGB = image[i];
-        unsigned char red = (RGB & 0b11100000) >> 5;
-        unsigned char green = (RGB & 0b00011100) >> 2;
-        unsigned char blue = (RGB & 0b00000011);
+        unsigned char R = (RGB & 0b11100000) >> 5;
+        unsigned char G = (RGB & 0b00011100) >> 2;
+        unsigned char B = (RGB & 0b00000011);
         unsigned char intensity = (red+green+blue+blue)/3;
         image[i] = 0;
         image[i] += intensity << 5;

@@ -1,43 +1,20 @@
-# HELPER FUNCTIONS FOR KERNEL CONVOLUTION
-
-# a0, a1: vector components
-magnitude:
-    # t0 <- (a0)^2
-    call square
-    li t0, 0
-    add t0, t0, a0
-    # t0 <- t0 + (a1)^2
-    mv a1, a0
-    call square
-    add a0, a0, t0
-    call sqrt
+.global draw_dot
+.type draw_dot, @function
+# a0: col
+# a1: row
+draw_dot:
+    andi t0, a0, 0x1FF    # select bottom 7 bits (col), 9bits
+    andi t1, a1, 0xFF     # select bottom 6 bits  (row), 8bits
+    slli t1, t1, 9        # {xcord[7:0],ycord[8:0]}
+    or t0, t0, t1         # 17-bit address
+    sw t0, 0(s4)          # write 13 address bits to register
+    sw a3, 0(s5)          # write color data to frame buffer
     ret
 
-# a0 <- a0^2
-square:
-    mv a1, a0
-    call multiply
-    ret
 
-# a0 <- sqrt(a0)
-sqrt:
-    ret
-
-# a0 <- a0 * a1
-# no temporary registers used!
-multiply:
-    bge a1, a0, add_m
-    # swap registers if a1 < a0
-    xor a0, a0, a1
-    xor a1, a0, a1
-    xor a0, a0, a1
-    add_m:
-    # a0 < a1 is true
-    addi a0, a0, -1
-    add a1, a1, a1
-    bge a0, x0, add_m
-    ret
-
-# a0 <- a0 / a1
-divide:
+.global sleep
+.type sleep, @function
+# a0: cycles to sleep
+sleep:
+    bge a0, x0, sleep
     ret
