@@ -11,7 +11,6 @@ draw_dot:
     sw a3, 0(s5)          # write color data to frame buffer
     ret
 
-
 .global sleep
 .type sleep, @function
 # a0: cycles to sleep

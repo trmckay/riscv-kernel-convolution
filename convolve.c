@@ -1,49 +1,50 @@
-// image is the beginning of the image array
-// matrix is pointer to beginning of a 3x3 kernel matrix
-void convolve(unsigned char *image, int rows, int cols, int *matrix, int *dest, int divisor)
+/* image is the beginning of the image array
+ * matrix is pointer to beginning of a 3x3 kernel matrix
+ * convolves a kernel accross a image referenced by 'image'
+ * saves the result of each convolution as an array of unsigned chars at 'dest'
+ * ONLY WORKS ON GRAYSCALE IMAGES
+ * convolutions with color require triple the memory, which is not available on the OTTER
+ */
+void convolve(unsigned char *image, int len, int cols, int *kernel[], unsigned char *dest, int divisor)
 {
-    int len = rows * cols;
     // for each pixel in the array
     for (int i = 0; i < len; i++)
     {
-        // collect its neighbors in an array
-        unsigned char pixelMatrix[] = buildMatrix(image+i);
-        int sum = 0;
-        // apply the kernel
         /*
-        pixel and kernel matrices in relation to the j value
+         * collect pixel its neighbors in an array
+         * image+i is a pointer to the current pixel
+         * pixelMatrix = [a, b, c, d, e, f, g, h, i]
+         * where e is the current pixel, *(image+i) and pixels are arranged as
+         *  _______
+         * | a b c |
+         * | d e f |
+         * | g h i |
+         *  ‾‾‾‾‾‾‾
         */
-        for (int j = 0, j < 9, j++)
+        unsigned char *currPx = image + i;
+        unsigned char pixelMatrix[9] = {
+            *(currPx - cols - 1),
+            *(currPx - cols),
+            *(currPx - cols + 1),
+            *(currPx - 1),
+            *(currPx),
+            *(currPx + 1),
+            *(currPx + cols - 1),
+            *(currPx + cols + 1)
+        };
+        unsigned char convolution = 0;
+        int intensity;
+        int kernalVal;
+        // apply the kernel
+        for (int j = 0; j < 9; j++)
         {
-            sum += pixelMatrix[i] * pixelMatrix[9-i];
+            // sample red value for intensity, this is arbitrary
+            intensity = (int)((pixelMatrix[j] & 0b11100000) >> 5);
+            kernalVal = *kernel[8-j];
+            convolution += kernalVal * intensity;
         }
         // save the result (sum) in memory
-        if (divisor != 0 && divisor != 1) sum = sum/divisor;
-        dest[i] = sum;
+        if (divisor != 0 && divisor != 1) convolution = convolution/divisor;
+        *(dest+i) = convolution;
     }
-}
-
-/*
-returns neighbors of pixel as:
-[a, b, c, d, e, f, g]
-where e is the current pixel and neighbors are arranged as:
--------------------
- a       b       c
- d       e       d
- e       f       g
--------------------
-*/
-void buildMatrix(unsigned char pixel*)
-{
-    unsigned char *neighbors[9] = {
-        pixel - cols - 1,
-        pixel - cols,
-        pixel - cols + 1,
-        pixel - 1,
-        pixel,
-        pixel + 1,
-        pixel + cols - 1,
-        pixel + cols + 1
-    };
-    return neighbors;
 }
