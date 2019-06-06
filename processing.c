@@ -54,11 +54,12 @@ arguments:
 a0: start address of image
 a1: end of image
 */
-void grayscale(unsigned char *image, unsigned char *end)
+void grayscale(unsigned char *image)
 {
+    volatile int len = 76800;
     // for each pixel
     // (end - image) = length of array
-    for (int i = 0; i < (end-image); i++)
+    for (int i = 0; i < len; i++)
     {
         // isolate R, G, and B values
         unsigned char RGB = *(image+i);

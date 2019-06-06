@@ -1,7 +1,7 @@
 void drawDot(int col, int row, unsigned char RGB)
 {
-    volatile unsigned int *vgaAddr  = (volatile unsigned int *)0x11100000;
-    volatile unsigned char *vgaColor = (volatile unsigned char *)0x11140000;
+    volatile unsigned int *vgaAddr   = (volatile unsigned int *)  0x11100000;
+    volatile unsigned char *vgaColor = (volatile unsigned char *) 0x11140000;
 
     int address = col & 0b111111111;
     int temp    = row & 0b011111111;
