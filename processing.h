@@ -7,4 +7,6 @@ void grayscale(unsigned char *image, unsigned char *end);
 
 int floorSqrt(int x);
 
+int multiply(int a, int b);
+
 #endif

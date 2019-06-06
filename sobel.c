@@ -23,7 +23,7 @@ void sobel(unsigned char *image, int rows, int cols, int len)
         {
             offset++;
             int intensity;
-            int kernalVal;
+            int kernelVal;
 
             unsigned char *currPx = image + offset;
             unsigned char pixelMatrix[9] = {
@@ -44,8 +44,8 @@ void sobel(unsigned char *image, int rows, int cols, int len)
             {
                 // sample red value for intensity, this is arbitrary
                 intensity = (int)((pixelMatrix[j] & 0b11100000) >> 5);
-                kernalVal = dxKernel[8-j];
-                dx += kernalVal * intensity;
+                kernelVal = dxKernel[8-j];
+                dx += multiply(kernelVal, intensity);
             }
 
             // run DY convolution
@@ -55,12 +55,12 @@ void sobel(unsigned char *image, int rows, int cols, int len)
             {
                 // sample red value for intensity, this is arbitrary
                 intensity = (int)((pixelMatrix[j] & 0b11100000) >> 5);
-                kernalVal = dyKernel[8-j];
-                dy += kernalVal * intensity;
+                kernelVal = dyKernel[8-j];
+                dy += multiply(kernelVal, intensity);
             }
 
             // take the magnitude, normalize it, save it in new pixel array
-            int magnitude = floorSqrt((dx * dx) + (dy * dy));
+            int magnitude = floorSqrt(multiply(dx, dx) + multiply(dy, dy));
             unsigned char sobel = (unsigned char)(magnitude >> 29);
             *(image+len+offset) = sobel;
         }
