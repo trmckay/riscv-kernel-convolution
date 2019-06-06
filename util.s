@@ -1,11 +1,11 @@
 .equ VG_ADDR,  0x11100000
 .equ VG_COLOR, 0x11140000
 
-.global draw_dot
-.type draw_dot, @function
 # a0: unsigned int col
 # a1: unsigned int row
 # a3: unsigned char RGB
+.globl draw_dot
+.type draw_dot, @function
 draw_dot:
     li t3, VG_ADDR
     li t4, VG_COLOR
@@ -17,9 +17,9 @@ draw_dot:
     sw a3, 0(t4)          # write color data to frame buffer
     ret
 
-.global sleep
-.type sleep, @function
 # a0: cycles to sleep
+.globl sleep
+.type sleep, @function
 sleep:
     addi a0, a0, -1
     bge a0, x0, sleep
