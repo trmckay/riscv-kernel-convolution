@@ -1,20 +1,5 @@
 #include <stdio.h>
 
-
-int multiply(int a, int b)
-{
-    int product = b;
-    if (b < a) {
-        a = a^b;
-        b = b^a;
-        a = a^b;
-    }
-    for (int i = 1; i < a; i++) {
-        product += b;
-    }
-    return product;
-}
-
 /* image is the beginning of the image array
  * matrix is pointer to beginning of a 3x3 kernel matrix
  * convolves a kernel accross a image referenced by 'image'
@@ -51,14 +36,14 @@ void convolve(unsigned char *image, int len, int cols, int *kernel, unsigned cha
         };
         unsigned char convolution = 0;
         int intensity;
-        int kernelVal;
+        int kernalVal;
         // apply the kernel
         for (int j = 0; j < 9; j++)
         {
             // sample red value for intensity, this is arbitrary
             intensity = (int)((pixelMatrix[j] & 0b11100000) >> 5);
-            kernelVal = *(kernel+8-j);
-            convolution += multiply(intensity, kernelVal);
+            kernalVal = *(kernel+8-j);
+            convolution += kernalVal * intensity;
         }
         // save the result (sum) in memory
         if (divisor != 0 && divisor != 1) convolution = convolution/divisor;
@@ -103,7 +88,7 @@ int floorSqrt(int x)
     while (result <= x)
     {
       i++;
-      result = multiply(i, i);
+      result = i * i;
     }
     return i - 1;
 }
