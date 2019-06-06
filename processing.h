@@ -9,4 +9,6 @@ int floorSqrt(int x);
 
 int multiply(int a, int b);
 
+int floorDivide(int dividend, int divisor);
+
 #endif

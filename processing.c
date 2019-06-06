@@ -15,6 +15,17 @@ int multiply(int a, int b)
     return product;
 }
 
+int floorDivide(int dividend, int divisor)
+{
+    int quotient = 0;
+    int counter = dividend;
+    while (counter > 0) {
+        counter -= divisor;
+        quotient += 1;
+    }
+    return quotient;
+}
+
 /* image is the beginning of the image array
  * matrix is pointer to beginning of a 3x3 kernel matrix
  * convolves a kernel accross a image referenced by 'image'
@@ -82,7 +93,7 @@ void grayscale(unsigned char *image, unsigned char *end)
         unsigned char R = (RGB & 0b11100000) >> 5;
         unsigned char G = (RGB & 0b00011100) >> 2;
         unsigned char B = (RGB & 0b00000011);
-        unsigned char intensity = (R+G+B+B)/3;
+        unsigned char intensity = floorDivide(R+G+B+B, 3);
         RGB = 0;
         RGB += intensity << 5;
         RGB += intensity << 2;
