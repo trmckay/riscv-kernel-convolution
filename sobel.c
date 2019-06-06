@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "processing.h"
 
 void sobel(unsigned char *image, int rows, int cols, int len)

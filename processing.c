@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 /* image is the beginning of the image array
  * matrix is pointer to beginning of a 3x3 kernel matrix
  * convolves a kernel accross a image referenced by 'image'
