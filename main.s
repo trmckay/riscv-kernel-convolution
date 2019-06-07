@@ -2,5 +2,6 @@
 .type main, @function
 main:
     mv a0, s0
-    call drawImage320x240
+    li a1, 80
+    call drawImage
     ret

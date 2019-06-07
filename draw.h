@@ -1,7 +1,7 @@
 #ifndef draw
 #define draw
 
-void drawImage320x240(unsigned char *image);
+void drawImage(unsigned char *image, int dim);
 
 void drawDot(unsigned int col, unsigned int row, unsigned char RGB);
 
