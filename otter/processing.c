@@ -8,7 +8,7 @@ This is not a fundamental limitation of the algorithms,
 but a technique to save time and memory.
 It is costly to calculate the length of a rectangular image due to the lack of
 hardware multiplication on the OTTER. Therefore, many of the dimensions are
-assumed (either hardcoded as 80x80 or any square).
+assumed (either hardcoded as 160x160 or any square).
 */
 
 /* all pixel values in memory <- grayscale equivalent

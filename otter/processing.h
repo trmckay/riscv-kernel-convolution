@@ -7,7 +7,7 @@ void grayscale(unsigned char *image, int len);
 
 int floorSqrt(int x);
 
-unsigned char sobelConvolve(unsigned char *pixel, int dim, char kernel[9]);
+void sobel(unsigned char *image, int dim, int len);
 
 void generalConvolve(unsigned char *image, int dim, int len, char kernel[9]);
 
