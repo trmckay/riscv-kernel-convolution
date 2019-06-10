@@ -14,7 +14,6 @@ entry:
     csrw mie, t0
 
     la s0, img
-    li s1, 0
     call _start #main
 
 end:

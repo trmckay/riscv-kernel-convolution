@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+// #include <math.h>
+#include "draw.h"
+
+typedef unsigned char   color;
 
 /*
 IMPORTANT!
@@ -7,40 +11,93 @@ Most if not all image processing functions assume a SQUARE image.
 This is not a fundamental limitation of the algorithms,
 but a technique to save time and memory.
 It is costly to calculate the length of a rectangular image due to the lack of
-hardware multiplication on the OTTER. Therefore, many of the dimensions are
-assumed (either hardcoded as 160x160 or any square).
+hardware multiplication on the OTTER.
 */
 
-/* all pixel values in memory <- grayscale equivalent
-arguments:
-a0: start address of image
-a1: end of image
-*/
-void grayscale(unsigned char *image, int len)
+/* all pixel values in memory <- grayscale equivalent */
+void grayscale(color *image, int dim, int overwrite)
 {
     // for each pixel
     // (end - image) = length of array
-    for (int i = 0; i < len; i++)
+    int offset = 0;
+    for (int row = 0; row < dim; row++)
     {
-        // isolate R, G, and B values
-        unsigned char RGB = *(image+i);
-        unsigned char R = (RGB & 0b11100000) >> 5;
-        unsigned char G = (RGB & 0b00011100) >> 2;
-        unsigned char B = (RGB & 0b00000011);
-        unsigned char intensity = (R+G+B+B)/3;
-        RGB = 0;
-        RGB += intensity << 5;
-        RGB += intensity << 2;
-        RGB += intensity >> 1;
-        *(image+i) = RGB;
+        for (int col = 0; col < dim; col++)
+        {
+            // isolate R, G, and B values
+            color RGB = *(image+offset);
+            color R = (RGB & 0b11100000) >> 5;
+            color G = (RGB & 0b00011100) >> 2;
+            color B = (RGB & 0b00000011);
+            color intensity = (R+G+B+B)/3;
+            RGB = 0;
+            RGB += intensity << 5;
+            RGB += intensity << 2;
+            RGB += intensity >> 1;
+            if (overwrite > 0) {
+                *(image + offset) = RGB;
+            }
+            drawDot(col, row, RGB);
+            offset++;
+        }
     }
 }
 
-/* simplified "good enough" alternative to vector magnitude to save some time
- * basically just an average, but left as a function to test alternatives */
-unsigned char _magnitude(unsigned char i, unsigned char j)
+void shiftColor(color *image, int dim, int deltaR, int deltaG, int deltaB)
 {
-    return (i + j) << 1;
+    // for each pixel
+    // (end - image) = length of array
+    int offset = 0;
+    for (int row = 0; row < dim; row++)
+    {
+        for (int col = 0; col < dim; col++)
+        {
+            // isolate R, G, and B values
+            color RGB = *(image+offset);
+            color R = (RGB & 0b11100000) >> 5;
+            color G = (RGB & 0b00011100) >> 2;
+            color B = (RGB & 0b00000011);
+
+            R = (R + deltaR) & 0b111;
+            G = (G + deltaG) & 0b111;
+            B = (B + deltaB) & 0b011;
+            RGB = (R << 5) + (G << 2) + B;
+
+            drawDot(col, row, RGB);
+            offset++;
+        }
+    }
+}
+
+void averageBlur(color *image, int dim)
+{
+    for (int row = 1; row < dim-1; row++)
+    {
+        for (int col = 1; col < dim-1; col++)
+        {
+            color *pixel = image + (row * col) + col;
+
+            color pixels[3][3] = {
+                { *(pixel - dim - 1),   *(pixel - dim),   *(pixel - dim + 1) },
+
+                { *(pixel - 1),         *(pixel),         *(pixel + 1) },
+
+                { *(pixel + dim - 1),   *(pixel + dim),   *(pixel + dim + 1) }
+            };
+
+            int rTotal = 0; int gTotal = 0; int bTotal = 0;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; i++) {
+                    rTotal += (pixels[i][j] & 0b11100000) >> 5;
+                    gTotal += (pixels[i][j] & 0b00011100) >> 2;
+                    bTotal += (pixels[i][j] & 0b00000011);
+                }
+            }
+            color R = rTotal / 9; color G = gTotal / 9; color B = bTotal / 9;
+            color RGB = (R << 5) + (G << 2) + B;
+            drawDot(col, row, RGB);
+        }
+    }
 }
 
 /* algorithm for kernel convolution:
@@ -48,82 +105,65 @@ unsigned char _magnitude(unsigned char i, unsigned char j)
  * | d, e, f | * | u, v, w | = (a*z) + (b*y) + (c*x) + (d*w) ... + (j*r)
  * [ h, i, j ]   [ x, y, z ]
 */
-unsigned char _applyKernel(unsigned char *pixel, int dim, char kernel[9])
+
+/*
+int _sobelKernel(color *pixel, int dim, int kernel[3][3])
 {
-    unsigned char pixels[9] = {
-        *(pixel - dim - 1),
-        *(pixel - dim),
-        *(pixel - dim + 1),
-        *(pixel - 1),
-        *(pixel),
-        *(pixel + 1),
-        *(pixel + dim - 1),
-        *(pixel + dim),
-        *(pixel + dim + 1)
+    color pixels[3][3] = {
+        { *(pixel - dim - 1),   *(pixel - dim),   *(pixel - dim + 1) },
+
+        { *(pixel - 1),         *(pixel),         *(pixel + 1) },
+
+        { *(pixel + dim - 1),   *(pixel + dim),   *(pixel + dim + 1) }
     };
+
     int convolution = 0;
-    for (int i = 0; i < 9; i++) {
-        convolution += pixels[i] * kernel[8-i];
+    for (int row = 0; row < 3; row++) {
+        for (int col = 0; col < 3; col++) {
+            convolution += ((pixels[row][col] & 0b11100000) >> 5) * kernel[3-row][3-col];
+        }
     }
-    // shifted right to fit into byte
-    convolution = (unsigned char)(abs(convolution)>>3);
     return convolution;
 }
 
-void sobel(unsigned char *image, int dim, int len)
+void sobel(color *image, int dim)
 {
-    char Gx[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-    char Gy[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+    int len = dim*dim;
 
-    unsigned char *GxConvs = (unsigned char *)(image + len);
-    unsigned char *GyConvs = (unsigned char *)(GxConvs + dim + 2);
+    grayscale(image, dim, 1);
 
-    for (int offset = 0; offset < len; offset++)
+    int gx[3][3] = {
+        {-1,  0,  1},
+        {-2,  0,  2},
+        {-1,  0,  1}
+    };
+
+    int gy[3][3] = {
+        {-1, -2, -1},
+        { 0,  0,  0},
+        { 1,  2,  1}
+    };
+
+    int offset;
+    for (int row = 1; row < dim-1; row++)
     {
-        if (offset > 7) {
-            // write magnitude of <dx[dim+1], dy[dim+1]> to mem[image + offset - dim - 2]
-            *(image + offset - dim - 2) = _magnitude(*(GxConvs + dim + 1), *(GyConvs + dim + 1));
+        for (int col = 1; col < dim-1; col++)
+        {
+            offset = (row * col) + col;
+
+            int dx = _sobelKernel(image + offset, dim, gx);
+            int dy = _sobelKernel(image + offset, dim, gy);
+
+            unsigned int magnitude = (unsigned int) sqrt((dx*dx) + (dy*dy));
+            color intensity = magnitude >> 2;
+
+            color R = intensity << 5;
+            color G = intensity << 2;
+            color B = intensity >> 1;
+            color RGB = R + G + B;
+
+            drawDot(col, row, RGB);
         }
-        // shift contents of dx and dy right one index
-        for (int i = dim + 2; i > 0; i--) {
-            *(GxConvs + i) = *(GxConvs + i - 1);
-            *(GyConvs + i) = *(GyConvs + i - 1);
-        }
-        // insert Gx(image+offset) into dx[0] and same for Gy
-        *GxConvs = _applyKernel((image+offset), dim, Gx);
-        *GyConvs = _applyKernel((image+offset), dim, Gy);
-    }
-    // write remaining contents of convolutions arrays
-    for (int i = 0; i < dim + 2; i++) {
-        *(image - (dim + 2) + i) = _magnitude(*(GxConvs + i), *(GyConvs + i));
     }
 }
-
-void generalConvolve(unsigned char *image, int dim, int len, char kernel[9])
-{
-    /* initialize a pointer to an array that will store intermediate convolution results
-     * the array is located directly after the pixel array */
-    unsigned char *convs = (unsigned char *)(image + len);
-
-    for (int offset = 0; offset < len; offset++)
-    {
-        /* after a certain point, a pixel will no longer be used for future convolutions
-         * this point is when the loop has passed a pixel by one row length + 2
-         * (image + offset) is the current pixel, so
-         * image + offset - (dim + 2) is a pointer to the pixel that can be overwritten
-         * its overwritten with the last item in the convolutions array */
-        if (offset > 7) {
-            *(image + offset - (dim + 2)) = *(convs + dim + 1);
-        }
-        /* next all elements in the array are shifted right on index, leaving the first index open
-        this is where the new convolution is placed */
-        for (int i = dim + 2; i > 0; i--) {
-            *(convs + i) = *(convs + i - 1);
-        }
-        *convs = _applyKernel((image+offset), dim, kernel);
-    }
-    // there are still elements in the intermediate elements in the array
-    for (int i = 0; i < dim + 2; i++) {
-        *(image - (dim + 2) + i) = *(convs + i);
-    }
-}
+*/
