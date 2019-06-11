@@ -1,5 +1,4 @@
-// #include <stdio.h>
-
+// forwards byte RGB value to the frame buffer which subsequently draws the dot to the monitor
 void drawDot(int col, int row, unsigned char RGB)
 {
     unsigned int *vgaAddr   = (unsigned int *)0x11100000;
@@ -13,6 +12,7 @@ void drawDot(int col, int row, unsigned char RGB)
     *(vgaColor) = RGB;
 }
 
+// draws a square image starting at the adress 'image' with a dimension of 'dim'
 void drawImage(unsigned char *image, int dim)
 {
     // for each pixel
@@ -21,7 +21,9 @@ void drawImage(unsigned char *image, int dim)
     {
         for (int col = 0; col < dim; col++)
         {
+            // get color data at that offset
             unsigned char RGB = *(image + offset);
+            // draw it
             drawDot(col, row, RGB);
             offset++;
         }

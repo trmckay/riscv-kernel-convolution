@@ -4,14 +4,9 @@
 .globl main
 .type main, @function
 main:
+    # move image pointer and dimension into argument registers
     mv a0, s0
     li a1, 200
+    # see 'draw.c'
     call drawImage
-    ret
-
-.globl sleep
-.type sleep, @function
-sleep:
-    addi a0, a0, -1
-    bgez a0, sleep
     ret
