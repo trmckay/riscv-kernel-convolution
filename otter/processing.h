@@ -7,4 +7,6 @@ void shiftColor(unsigned char *image, int dim, int deltaR, int deltaG, int delta
 
 void convolve(unsigned char *image, int dim, int kernel[3][3], int divisor);
 
+void sobel(unsigned char *image, int dim, int threshold);
+
 #endif
