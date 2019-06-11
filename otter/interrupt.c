@@ -12,6 +12,12 @@ void interrupt(unsigned char *image)
 
     int mode = *SWITCHES & 0b11111111;
 
+    int averageBlur[3][3] = { {1, 1, 1}, {1, 1, 1}, {1, 1, 1} };
+    int sharpen_1[3][3] = { {-1, -1, -1}, {-1, 9, -1}, {-1, -1, -1} };
+    int gaussian[3][3] = { {1, 2, 1}, {2, 4, 2}, {1, 2, 1} };
+    int edges[3][3] = { {-1, -1, -1}, {-1, 8, -1}, {-1, -1, -1} };
+    int sharpen_2[3][3] = { {0, -1, 0}, {-1, 5, -1}, {0, -1, 0} };
+
     switch (mode)
     {
         case 0:
@@ -19,6 +25,24 @@ void interrupt(unsigned char *image)
             break;
         case 1:
             shiftColor(image, 200, deltaR, deltaG, deltaB);
+            break;
+        case 2:
+            shiftColor(image, 200, -deltaR, -deltaG, -deltaB);
+            break;
+        case 3:
+            convolve(image, 200, averageBlur, 9);
+            break;
+        case 4:
+            convolve(image, 200, sharpen_1, 1);
+            break;
+        case 5:
+            convolve(image, 200, gaussian, 16);
+            break;
+        case 6:
+            convolve(image, 200, edges, 1);
+            break;
+        case 7:
+            convolve(image, 200, sharpen_2, 1);
             break;
     }
 }

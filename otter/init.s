@@ -17,7 +17,7 @@ entry:
     call _start #main
 
 end:
-    j end               # loop when finished if there is no environment to return to.
+    j end
 
 isr:
     mv a0, s0
