@@ -4,7 +4,6 @@
 void interrupt(unsigned char *image, int dim)
 {
     // addresses for MMIO
-    unsigned int *LEDS = (unsigned int *) 0x11080000;
     unsigned int *SWITCHES = (unsigned int *) 0x11000000;
 
     // right eight switches for mode select
