@@ -158,7 +158,6 @@ void sobel(color *image, int dim, int threshold)
         }
     }
 }
-
 /* kernel convolution using an arbitrary kernel and optional divisor to normalize output
 see https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution */
 void convolve(color *image, int dim, int kernel[3][3], int divisor)

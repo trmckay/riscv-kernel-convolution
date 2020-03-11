@@ -42,22 +42,15 @@ def main(image_path):
     rgbs = image_to_bytes(image_path)
     array_to_output(rgbs)
     print("done!\nyour array can be found at \'./data.txt\'")
-    exit()
 
 if __name__ == '__main__':
     # check correct arg length
-    if ((len(sys.argv) < 2) or (len(sys.argv) > 3)):
-        print('Usage: \'python img_script.py <path to image> <-f>\'')
+    if (len(sys.argv) != 2):
+        print('usage: \'python image_assembler.py <image>\'\nuse flag -p for an assembly program to load the image to the frame buffer')
         exit()
-    if ((len(sys.argv) == 3)):
-        if (sys.argv[2] == '-f'):
-            main(sys.argv[1])
-        else:
-            print('Argument \'' + sys.argv[2] + '\' ivalid.')
-            print('Valid arguments: \'-f\'')
-            exit()
     # check for valid file extension
     for ext in extensions:
         if (sys.argv[1].find(ext) > -1):
             main(sys.argv[1])
-    print('Invalid image file, use \'-f\' to force')
+            exit()
+    print('please use a valid image file')
