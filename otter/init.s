@@ -27,7 +27,6 @@ end:
 isr:
     # moved image pointer and dimension into argument registers
     mv a0, s0
-    li a1, 200
     # see 'interrupt.c'
     call interrupt
     mret

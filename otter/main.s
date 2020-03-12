@@ -6,7 +6,6 @@
 main:
     # move image pointer and dimension into argument registers
     mv a0, s0
-    li a1, 200
     # see 'draw.c'
-    call drawImage
+    call draw_image
     ret

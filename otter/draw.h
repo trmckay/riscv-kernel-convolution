@@ -1,8 +1,9 @@
-#ifndef draw
-#define draw
+#ifndef DRAW_H
+#define DRAW_H
 
-void drawImage(unsigned char *image, int dim);
+#include "vga.h"
 
-void drawDot(unsigned int col, unsigned int row, unsigned char RGB);
+void drawImage(RGB_332_type *image);
+void draw_dot(unsigned int offset, unsigned char RGB, pixel_buf_type *px_bfr);
 
 #endif

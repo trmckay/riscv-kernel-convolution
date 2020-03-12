@@ -1,30 +1,33 @@
-// forwards byte RGB value to the frame buffer which subsequently draws the dot to the monitor
-void drawDot(int col, int row, unsigned char RGB)
-{
-    unsigned int *vgaAddr   = (unsigned int *)0x11100000;
-    unsigned char *vgaColor = (unsigned char *)0x11140000;
+#include "draw.h"
 
-    int address = col & 0b111111111;
-    int temp    = row & 0b011111111;
-    temp = temp << 9;
-    address = address | temp;
-    *(vgaAddr)  = address;
-    *(vgaColor) = RGB;
+void draw_dot(unsigned int offset, RGB_332_type RGB, pixel_buf_type *pix_buf)
+{
+    pix_buf->bfr[pix_buf->cap] = RGB;
+    // write four pixels at a time
+    if (++pix_buf->cap == 4)
+    {
+        ((word *)VGA_ADDR)[offset] =
+            (pix_buf->bfr[0] << 24) +
+            (pix_buf->bfr[3] << 16) +
+            (pix_buf->bfr[1] << 0);
+        pix_buf->cap = 0;
+    }
 }
 
-// draws a square image starting at the adress 'image' with a dimension of 'dim'
-void drawImage(unsigned char *image, int dim)
+// draws an image starting at the adress 'image'
+void draw_image(RGB_332_type *image)
 {
-    // for each pixel
     int offset = 0;
-    for (int row = 0; row < dim; row++)
+    pixel_buf_type pix_buf;
+
+    for (int row = 0; row < Y_RES; row++)
     {
-        for (int col = 0; col < dim; col++)
+        for (int col = 0; col < X_RES; col++)
         {
             // get color data at that offset
-            unsigned char RGB = *(image + offset);
+            RGB_332_type RGB = *(image + offset);
             // draw it
-            drawDot(col, row, RGB);
+            draw_dot(offset, RGB, &pix_buf);
             offset++;
         }
     }

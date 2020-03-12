@@ -1,12 +1,15 @@
-#ifndef processing
-#define processing
+#ifndef PROCESSING_H
+#define PROCESSING_H
 
-void grayscale(unsigned char *image, int len, int overwrite);
+#include "draw.h"
+#include "vga.h"
 
-void shiftColor(unsigned char *image, int dim, int deltaR, int deltaG, int deltaB);
+void grayscale(RGB_332_type *image, int overwrite);
 
-void convolve(unsigned char *image, int dim, int kernel[3][3], int divisor);
+void shiftColor(RGB_332_type *image, int deltaR, int deltaG, int deltaB);
 
-void sobel(unsigned char *image, int dim, int threshold);
+void convolve(RGB_332_type *image, int kernel[3][3], int divisor);
+
+void sobel(RGB_332_type *image, int threshold);
 
 #endif

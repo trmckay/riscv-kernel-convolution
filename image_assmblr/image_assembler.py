@@ -10,7 +10,7 @@ def image_to_bytes(img_name):
     # convert it to 24bit RGB
     img = img.convert(mode='RGB', colors=256)
     # scale it down to 320x240
-    img = img.resize((200, 200))
+    img = img.resize((320, 240))
     # get pixel data as a Python List
     pixels = list(img.getdata())
     # empty list containing new 8bit RGB data

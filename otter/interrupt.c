@@ -1,10 +1,11 @@
 #include "draw.h"
 #include "processing.h"
+#include "vga.h"
 
-void interrupt(unsigned char *image, int dim)
+void interrupt(RGB_332_type *image)
 {
     // addresses for MMIO
-    unsigned int *SWITCHES = (unsigned int *) 0x11000000;
+    unsigned int *SWITCHES = (unsigned int *)0x11000000;
 
     // right eight switches for mode select
     int mode = *SWITCHES & 0b11111111;
@@ -38,34 +39,34 @@ void interrupt(unsigned char *image, int dim)
     switch (mode)
     {
         case 0:
-            grayscale(image, dim, 0);
+            grayscale(image, 0);
             break;
         case 1:
             // use the left 8 switches to control color channels
-            shiftColor(image, dim, sw16_14, sw13_11, sw10_9);
+            shiftColor(image, sw16_14, sw13_11, sw10_9);
             break;
         case 2:
             // use the left 8 switches to control color channels
-            shiftColor(image, dim, -sw16_14, -sw13_11, -sw10_9);
+            shiftColor(image, -sw16_14, -sw13_11, -sw10_9);
             break;
         case 3:
-            convolve(image, dim, averageBlur, 9);
+            convolve(image, averageBlur, 9);
             break;
         case 4:
-            convolve(image, dim, sharpen_1, 1);
+            convolve(image, sharpen_1, 1);
             break;
         case 5:
-            convolve(image, dim, gaussian, 16);
+            convolve(image, gaussian, 16);
             break;
         case 6:
-            convolve(image, dim, edges, 1);
+            convolve(image, edges, 1);
             break;
         case 7:
-            convolve(image, dim, sharpen_2, 1);
+            convolve(image, sharpen_2, 1);
             break;
         case 8:
             // use the left 8 switches to control threshold
-            sobel(image, dim, sw16_9);
+            sobel(image, sw16_9);
             break;
     }
 }
