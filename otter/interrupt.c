@@ -6,6 +6,7 @@ void interrupt(RGB_332_type *image)
 {
     // addresses for MMIO
     unsigned int *SWITCHES = (unsigned int *)0x11000000;
+    *((int *)0x110C0000) = 1;
 
     // right eight switches for mode select
     int mode = *SWITCHES & 0b11111111;
@@ -69,4 +70,6 @@ void interrupt(RGB_332_type *image)
             sobel(image, sw16_9);
             break;
     }
+
+    *((int *)0x110C0000) = 0;
 }
