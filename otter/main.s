@@ -9,7 +9,7 @@ main:
     # move image pointer and dimension into argument registers
     mv a0, s0
     # see 'draw.c'
-    call draw_image
+    call run_img_proc
     lw a0, 4(sp)
     addi sp, sp, 4
     ret

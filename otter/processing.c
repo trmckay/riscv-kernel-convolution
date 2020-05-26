@@ -8,7 +8,10 @@ int _clamp(int n, int min, int max)
     return n;
 }
 
-RGB_332_type _grayscalePixel(RGB_332_type pixel)
+#define VEC_MAG(A, B)\
+    ((A) > (B)) ? ((A) + ((B)>>1)) : ((B) + ((A)>>1))
+
+RGB_332_type _grayscale_pixel(RGB_332_type pixel)
 {
     // isolate R, G, and B values
     RGB_332_type R = (pixel & 0b11100000) >> 5;
@@ -28,24 +31,20 @@ RGB_332_type _grayscalePixel(RGB_332_type pixel)
 void grayscale(RGB_332_type *image, int overwrite)
 {
     int offset = 0;
-    pixel_buf_type pix_buf;
-
     for (int row = 0; row < Y_RES; row++)
     {
         for (int col = 0; col < X_RES; col++)
         {
-            RGB_332_type newPixel = _grayscalePixel(*(image + offset));
-            draw_dot(offset, newPixel, &pix_buf);
+            RGB_332_type RGB = _grayscale_pixel(*(image + offset));
+            DRAW_DOT(RGB);
             offset++;
         }
     }
 }
 
-void shiftColor(RGB_332_type *image, int deltaR, int deltaG, int deltaB)
+void shift_color(RGB_332_type *image, int d_rd, int d_gr, int d_bl)
 {
     int offset = 0;
-    pixel_buf_type pix_buf;
-
     for (int row = 0; row < Y_RES; row++)
     {
         for (int col = 0; col < X_RES; col++)
@@ -58,23 +57,23 @@ void shiftColor(RGB_332_type *image, int deltaR, int deltaG, int deltaB)
 
             // add the color delta
             // clamp it between 0 and the max intensity for that channel
-            R = _clamp(R + deltaR, 0, 0b111);
-            G = _clamp(G + deltaG, 0, 0b111);
-            B = _clamp(B + deltaB, 0, 0b011);
+            R = _clamp(R + d_rd, 0, 0b111);
+            G = _clamp(G + d_gr, 0, 0b111);
+            B = _clamp(B + d_bl, 0, 0b011);
             RGB = (R << 5) + (G << 2) + B;
 
-            draw_dot(offset, RGB, &pix_buf);
+            DRAW_DOT(RGB);
             offset++;
         }
     }
 }
 
 // apply the kernel to the pixel matrix and divide the result by the divisor
-RGB_332_type _applyKernel(RGB_332_type pixels[3][3], int kernel[3][3], int divisor)
+RGB_332_type _apply_kernel(RGB_332_type pixels[3][3], int kernel[3][3], int divisor)
 {
-    int rTotal = 0;
-    int gTotal = 0;
-    int bTotal = 0;
+    int rd_sum = 0;
+    int gr_sum = 0;
+    int bl_sum = 0;
 
     for (int i = 0; i < 3; i++)
     {
@@ -82,63 +81,60 @@ RGB_332_type _applyKernel(RGB_332_type pixels[3][3], int kernel[3][3], int divis
         {
             // calculate the convolution separately for each color channel
             RGB_332_type RGB = pixels[i][j];
-            rTotal += ((RGB & 0b11100000) >> 5) * kernel[2-i][2-j];
-            gTotal += ((RGB & 0b00011100) >> 2) * kernel[2-i][2-j];
-            bTotal += (RGB & 0b00000011) * kernel[2-j][2-i];
+            rd_sum += ((RGB & 0b11100000) >> 5) * kernel[2-i][2-j];
+            gr_sum += ((RGB & 0b00011100) >> 2) * kernel[2-i][2-j];
+            bl_sum += (RGB & 0b00000011) * kernel[2-j][2-i];
         }
     }
     // clamp values between 0 and the max intensity for that color channel
-    RGB_332_type newR = (RGB_332_type)(_clamp(rTotal / divisor, 0, 0b111));
-    RGB_332_type newG = (RGB_332_type)(_clamp(gTotal / divisor, 0, 0b111));
-    RGB_332_type newB = (RGB_332_type)(_clamp(bTotal / divisor, 0, 0b011));
+    RGB_332_type new_rd = (RGB_332_type)(_clamp(rd_sum >> divisor, 0, 0b111));
+    RGB_332_type new_gr = (RGB_332_type)(_clamp(gr_sum >> divisor, 0, 0b111));
+    RGB_332_type new_bl = (RGB_332_type)(_clamp(bl_sum >> divisor, 0, 0b011));
 
-    RGB_332_type newRGB = (newR << 5) + (newG << 2) + (newB);
+    RGB_332_type newRGB = (new_rd << 5) + (new_gr << 2) + (new_bl);
     return newRGB;
 }
 
-RGB_332_type _sobelKernel(RGB_332_type pixels[3][3], int threshold)
+RGB_332_type _sobel_kernel(RGB_332_type pixels[3][3], int threshold)
 {
     // kernels used for sobel operator
-    int Gx[3][3] = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
-    int Gy[3][3] = { {1, 2, 1}, {0, 0, 0}, {-1, -2, -1} };
+    int kx[3][3] = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
+    int ky[3][3] = { {1, 2, 1}, {0, 0, 0}, {-1, -2, -1} };
 
-    int dx = 0;
-    int dy = 0;
+    int gx = 0, gy = 0;
 
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)
         {
             // sobel must operate on a grayscale image
-            RGB_332_type pixel = _grayscalePixel(pixels[i][j]);
+            RGB_332_type pixel = _grayscale_pixel(pixels[i][j]);
             // consider the red channel, this is arbitrary
             RGB_332_type intensity = (pixel & 0b11100000) >> 5;
             /* apply both kernels to get approximations of the partial derivative
                in the x and y directions */
-            dx += intensity * Gx[2-i][2-j];
-            dy += intensity * Gy[2-i][2-j];
+            gx += intensity * kx[2-i][2-j];
+            gy += intensity * ky[2-i][2-j];
         }
     }
 
     // taking the magnitude of the partials gives the gradient
-    int gradient = sqrt(dx*dx + dy*dy);
+    int gradient = VEC_MAG(gx, gy);
     // gradients that do not meet the threshold will not be considered edges
     if (gradient < threshold) gradient = 0;
     // clamp the gradient at 8
     gradient = _clamp(gradient, 0, 0b111);
     // shift the gradient into all three color channels
-    RGB_332_type newRGB = (gradient << 5) + (gradient << 2) + (gradient & 0b011);
-    return newRGB;
+    RGB_332_type new_rgb = (gradient << 5) + (gradient << 2) + (gradient & 0b011);
+    return new_rgb;
 }
 
 void sobel(RGB_332_type *image, int threshold)
 {
-    int offset = 0;
-    pixel_buf_type pix_buf;
-
-    for (int row = 0; row < Y_RES; row++)
+    coord_type offset = 0;
+    for (coord_type row = 0; row < Y_RES; row++)
     {
-        for (int col = 0; col < X_RES; col++)
+        for (coord_type col = 0; col < X_RES; col++)
         {
             // get pointer to current pixel
             RGB_332_type *pixel = image + offset;
@@ -151,9 +147,9 @@ void sobel(RGB_332_type *image, int threshold)
                 { *(pixel + X_RES - 1), *(pixel + X_RES),   *(pixel + X_RES + 1) }
             };
             // apply the sobel operator
-            RGB_332_type RGB = _sobelKernel(pixels, threshold);
+            RGB_332_type RGB = _sobel_kernel(pixels, threshold);
             // draw the new value
-            draw_dot(offset, RGB, &pix_buf);
+            DRAW_DOT(RGB);
             offset++;
         }
     }
@@ -162,12 +158,10 @@ void sobel(RGB_332_type *image, int threshold)
 see https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution */
 void convolve(RGB_332_type *image, int kernel[3][3], int divisor)
 {
-    int offset = 0;
-    pixel_buf_type pix_buf;
-
-    for (int row = 0; row < Y_RES; row++)
+    coord_type offset = 0;
+    for (coord_type row = 0; row < Y_RES; row++)
     {
-        for (int col = 0; col < X_RES; col++)
+        for (coord_type col = 0; col < X_RES; col++)
         {
             RGB_332_type *pixel = image + offset;
             RGB_332_type pixels[3][3] = {
@@ -177,8 +171,8 @@ void convolve(RGB_332_type *image, int kernel[3][3], int divisor)
 
                 { *(pixel + X_RES - 1), *(pixel + X_RES),   *(pixel + X_RES + 1) }
             };
-            RGB_332_type RGB = _applyKernel(pixels, kernel, divisor);
-            draw_dot(offset, RGB, &pix_buf);
+            RGB_332_type RGB = _apply_kernel(pixels, kernel, divisor);
+            DRAW_DOT(RGB);
             offset++;
         }
     }

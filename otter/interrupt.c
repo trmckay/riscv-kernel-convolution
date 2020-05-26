@@ -1,6 +1,6 @@
 #include "draw.h"
 #include "processing.h"
-#include "vga.h"
+#include "otter.h"
 
 void interrupt(RGB_332_type *image)
 {
@@ -44,11 +44,11 @@ void interrupt(RGB_332_type *image)
             break;
         case 1:
             // use the left 8 switches to control color channels
-            shiftColor(image, sw16_14, sw13_11, sw10_9);
+            shift_color(image, sw16_14, sw13_11, sw10_9);
             break;
         case 2:
             // use the left 8 switches to control color channels
-            shiftColor(image, -sw16_14, -sw13_11, -sw10_9);
+            shift_color(image, -sw16_14, -sw13_11, -sw10_9);
             break;
         case 3:
             convolve(image, averageBlur, 9);
